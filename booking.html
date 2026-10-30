@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Local Theatre Booking System</title>
+<!-- QRCode.js library (pinned version) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+/* ===== Theme: clean white (BookMyShow-style) with red accent + navy header ===== */
+:root{--bg:#fff;--card:#fff;--red:#f84464;--gold:#f84464;--pur:#333545;--txt:#1f2533;--mut:#6b7280;--line:#e5e7eb;--soft:#f5f5f7}
+*{box-sizing:border-box;font-family:"Times New Roman",Times,serif}
+body{margin:0;background:#fff;color:var(--txt);font-size:17px}
+h1,h2,h3,h4{margin:.3em 0}.gold{color:var(--red)}.mut{color:var(--mut)}
+header{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px 24px;background:#333545;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.logo{font-size:22px;font-weight:bold;color:#fff;display:flex;align-items:center;gap:8px;text-decoration:none}
+.logo i{background:var(--red);border-radius:8px;padding:3px 8px;font-style:normal}
+nav{display:flex;gap:16px;flex-wrap:wrap;margin-left:auto}nav a{color:#e5e7eb;text-decoration:none;padding:4px 2px;border-bottom:2px solid transparent}nav a:hover{color:#fff;border-color:var(--red)}
+#burger{display:none;background:none;border:1px solid #888;color:#fff;font-size:22px;border-radius:6px}
+select,input,textarea{background:#fff;color:var(--txt);border:1px solid #cfd3da;border-radius:6px;padding:8px;font-size:16px;max-width:100%}
+.btn{background:var(--red);color:#fff;border:0;border-radius:6px;padding:10px 18px;font-size:16px;cursor:pointer;transition:.2s}
+.btn:hover{background:#e0213f;transform:translateY(-1px);box-shadow:0 6px 16px rgba(248,68,100,.35)}.btn.ghost{background:#fff;border:1px solid var(--red);color:var(--red)}.btn.sm{padding:6px 12px}
+.hero{min-height:50vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:40px 20px;color:#fff;background:linear-gradient(135deg,rgba(51,53,69,.96),rgba(248,68,100,.88)),repeating-linear-gradient(90deg,#333545 0 40px,#2a2b3a 40px 80px)}
+.hero h1{font-size:clamp(32px,6vw,58px);margin:.2em 0}.hero .btn{background:#fff;color:var(--red);text-decoration:none;font-weight:bold}
+.demo{background:#fff7e6;color:var(--txt);border-left:4px solid #f5a623;padding:8px 12px;border-radius:6px;margin:10px 0;font-size:15px}
+section{padding:36px 20px;max-width:1250px;margin:auto}section>h2{border-left:5px solid var(--red);padding-left:10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:20px}
+.card{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;padding-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.08);transition:.25s}
+.card:hover{transform:translateY(-5px);box-shadow:0 12px 26px rgba(0,0,0,.18)}
+.card>*:not(.pw):not(.banner):not(.simg){margin-left:12px;margin-right:12px}
+.pw{position:relative}.card img.p{width:100%;aspect-ratio:2/3;object-fit:cover;display:block;background:#ddd}
+.rt{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(0,0,0,.88));color:#fff;padding:18px 10px 6px;font-size:15px}
+.tag{display:inline-block;background:var(--pur);color:#fff;border-radius:4px;padding:1px 9px;font-size:13px;margin:2px 2px 2px 0}
+.banner{height:90px;display:flex;align-items:center;justify-content:center;font-size:42px;color:#fff}
+.simg{height:150px;display:flex;align-items:center;justify-content:center;font-size:56px;background-size:cover;background-position:center}
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.qty{display:flex;gap:4px;margin:6px 12px}.qty button{width:30px;background:var(--pur);color:#fff;border:0;border-radius:6px;cursor:pointer}.qty input{width:44px;text-align:center}
+.cartbox{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:14px;margin-top:18px}
+#modal{display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.6);overflow:auto;padding:14px}#modal.on{display:block}
+#mwrap{background:#fff;border-radius:12px;max-width:980px;margin:auto;padding:20px;position:relative;box-shadow:0 10px 40px rgba(0,0,0,.4)}
+#x{position:absolute;right:12px;top:8px;background:none;border:0;color:#555;font-size:30px;cursor:pointer}
+.steps{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 14px}.steps span{font-size:13px;padding:3px 9px;border-radius:14px;background:#eef0f4;color:#555}.steps .cur{background:var(--red);color:#fff}.steps .done{background:var(--pur);color:#fff}
+.nav2{display:flex;justify-content:space-between;margin-top:16px}
+.opt{border:1px solid var(--line);border-radius:8px;padding:10px;margin:8px 0;cursor:pointer}.opt.sel,.opt:hover{border-color:var(--red);background:#fff1f3}
+.chip{display:inline-block;border:1px solid #2e7d32;color:#2e7d32;padding:6px 14px;border-radius:6px;margin:4px;cursor:pointer}.chip.sel,.chip:hover{background:#2e7d32;color:#fff}
+.screen{height:8px;background:linear-gradient(90deg,transparent,#9aa0ac,transparent);border-radius:50%;margin:12px auto 20px;width:70%}
+.row{display:flex;gap:6px;justify-content:center;align-items:center;margin:5px 0;flex-wrap:wrap}.row b{width:20px}
+.seat{border:0;border-radius:6px 6px 3px 3px;color:#fff;font-size:12px;cursor:pointer;height:30px;width:34px}
+.seat.R{background:#2e7d32}.seat.L{background:#6a1b9a;width:42px;height:34px}.seat.B{background:#c9302c;width:56px;height:38px;border:2px solid #f5a623}
+.seat.bk{background:#bbb!important;cursor:not-allowed;opacity:.6}.seat.sel{outline:3px solid #f5a623;background:#f5a623!important;color:#000}
+.legend span{margin-right:14px;font-size:14px}.dot{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:4px}
+table{width:100%;border-collapse:collapse}td,th{padding:6px;border-bottom:1px solid var(--line);text-align:left}
+.qrs{display:flex;gap:24px;flex-wrap:wrap;justify-content:center}.qrb{text-align:center;background:var(--soft);padding:14px;border-radius:12px}.qrb div{background:#fff;padding:8px;display:inline-block}
+#toasts{position:fixed;right:14px;top:70px;z-index:200}.toast{padding:10px 16px;border-radius:8px;margin-bottom:8px;color:#fff;background:#2e7d32;animation:in .3s}.toast.err{background:var(--red)}@keyframes in{from{transform:translateX(60px);opacity:0}}
+footer{text-align:center;padding:22px;color:#cbd0da;background:#333545;margin-top:20px}
+label{display:block;margin:8px 0 3px}form input,form textarea{width:100%}
+@media(max-width:760px){#burger{display:block;margin-left:auto}nav{display:none;width:100%}nav.on{display:flex;flex-direction:column}}
+@media print{body>*:not(#modal){display:none!important}#modal{position:static;background:#fff}.nav2,#x,.btn{display:none}#mwrap{box-shadow:none}}
+</style>
+</head>
+<body>
+<div id="toasts"></div>
+<header>
+  <a class="logo" href="#home"><i>🎬</i> Local Theatre Booking System</a>
+  <button id="burger" onclick="$('nv').classList.toggle('on')">☰</button>
+  <nav id="nv" onclick="this.classList.remove('on')">
+    <a href="#home">Home</a><a href="#movies">Movies</a><a href="#theatres">Theatres</a><a href="#snacks">Snacks</a><a href="#bookings">My Bookings</a><a href="#about">About</a><a href="#contact">Contact</a>
+  </nav>
+  <select id="dsel" onchange="renderTheatres()" title="Select your district"></select>
+  <button class="btn sm" id="loginBtn" onclick="authM()">Login / Register</button>
+</header>
+
+<div class="hero" id="home">
+  <h1>🎬 Local Theatre Booking System</h1>
+  <p style="font-size:20px">Pick your district · Choose a movie · Select your seats · Get your QR ticket</p>
+  <a href="#movies" class="btn" style="text-decoration:none">Explore Movies</a>
+  <div class="demo" style="max-width:700px">Demo project: all theatres, showtimes, seat availability and payments are simulated in the browser. Nothing here is a real booking.</div>
+</div>
+
+<section id="movies"><h2 class="gold">🎞 Movie Catalogue</h2>
+  <div class="filters"><input id="q" placeholder="Search movies…" oninput="renderMovies()"><select id="lf" onchange="renderMovies()"><option value="">All languages</option></select></div>
+  <div class="grid" id="mgrid"></div></section>
+
+<section id="theatres"><h2 class="gold">🏛 Theatres in <span id="tdn"></span></h2>
+  <div class="demo">Theatre catalogue and schedules are demonstration data unless verified.</div><div class="grid" id="tgrid"></div></section>
+
+<section id="snacks"><h2 class="gold">🍿 Snacks Menu</h2><div id="snk"></div></section>
+
+<section id="bookings"><h2 class="gold">🎟 My Bookings</h2><div id="blist"></div></section>
+
+<section id="about"><h2 class="gold">About Us</h2>
+  <p>The Local Theatre Booking System is a beginner-friendly front-end demo that shows how a movie-booking website works: district selection, theatres, seat maps, snacks, simulated payment and QR confirmations. Built with HTML, CSS and vanilla JavaScript.</p></section>
+
+<section id="contact"><h2 class="gold">Contact Us</h2>
+  <form onsubmit="return contact(event)" style="max-width:520px"><label>Name</label><input id="cn"><label>Email</label><input id="ce"><label>Message</label><textarea id="cm" rows="4"></textarea><br><br><button class="btn">Send Message</button></form></section>
+<footer>© Local Theatre Booking System — Demo project. Payments &amp; QR codes are not connected to any real theatre or bank.</footer>
+
+<div id="modal"><div id="mwrap"><button id="x" onclick="closeM()">×</button><div id="mbody"></div></div></div>
+
+<script>
+/* =============================================================
+   DATA — 38 districts, 20 movies, 15 theatres, snacks
+   ============================================================= */
+const D=["Ariyalur","Chengalpattu","Chennai","Coimbatore","Cuddalore","Dharmapuri","Dindigul","Erode","Kallakurichi","Kancheepuram","Kanniyakumari","Karur","Krishnagiri","Madurai","Mayiladuthurai","Nagapattinam","Namakkal","Nilgiris","Perambalur","Pudukkottai","Ramanathapuram","Ranipet","Salem","Sivaganga","Tenkasi","Thanjavur","Theni","Thoothukudi","Tiruchirappalli","Tirunelveli","Tirupathur","Tiruppur","Tiruvallur","Tiruvannamalai","Tiruvarur","Vellore","Viluppuram","Virudhunagar"];
+// [title, language, genre, duration, rating, description]
+const M=[
+["Leo","Tamil","Action/Thriller","2h 44m",7.2,"A quiet cafe owner's violent past catches up with him."],
+["Jailer","Tamil","Action/Comedy","2h 48m",7.0,"A retired jailer takes on a smuggling gang to protect his family."],
+["Vikram","Tamil","Action/Thriller","2h 55m",8.3,"A black-ops agent hunts a masked gang behind a series of murders."],
+["Master","Tamil","Action/Drama","2h 59m",7.3,"An alcoholic professor clashes with a gangster who exploits a juvenile home."],
+["Thunivu","Tamil","Heist/Action","2h 22m",6.8,"A daring bank heist reveals a bigger conspiracy."],
+["Amaran","Tamil","Biographical/War","2h 49m",8.4,"The story of an army officer's courage and sacrifice."],
+["Dragon","Tamil","Comedy/Drama","2h 34m",7.6,"A student who cut corners faces the consequences in adult life."],
+["Good Bad Ugly","Tamil","Action/Comedy","2h 18m",6.5,"A reformed gangster fights to get back to his family."],
+["Coolie","Tamil","Action/Thriller","2h 50m",7.0,"A former union leader is pulled into a smuggling network."],
+["Retro","Tamil","Romance/Action","2h 48m",6.9,"A gangster tries to leave violence behind for love."],
+["Pushpa 2: The Rule","Telugu","Action/Drama","3h 20m",7.4,"Pushpa Raj expands his sandalwood empire against a fierce rival."],
+["RRR","Telugu","Action/Period","3h 07m",8.0,"Two revolutionaries form a legendary friendship against the British Raj."],
+["Kalki 2898 AD","Telugu","Sci-Fi/Epic","3h 01m",7.0,"Mythology meets a dystopian future in a battle for hope."],
+["Manjummel Boys","Malayalam","Survival/Thriller","2h 15m",8.2,"Friends on a Kodaikanal trip face a rescue in the Guna Caves."],
+["Premalu","Malayalam","Romance/Comedy","2h 36m",7.7,"A young graduate's feel-good journey through love in Hyderabad."],
+["Lucifer","Malayalam","Political/Thriller","2h 54m",7.3,"A political heir's death exposes a web of power and secrets."],
+["Jawan","Hindi","Action/Thriller","2h 49m",7.0,"A man driven by a personal vendetta sets out to right society's wrongs."],
+["3 Idiots","Hindi","Comedy/Drama","2h 50m",8.4,"Three engineering students learn that passion beats pressure."],
+["Oppenheimer","English","Biographical/Drama","3h 00m",8.3,"The story of the physicist behind the atomic bomb."],
+["Inception","English","Sci-Fi/Thriller","2h 28m",8.8,"A thief enters dreams to plant an idea in a target's mind."]];
+// [name, district, address, facilities, royalBedsAvailable, showtimes]
+const SA=["10:00 AM","01:30 PM","06:45 PM","10:15 PM"],SB=["09:30 AM","12:45 PM","04:00 PM","07:15 PM","10:30 PM"];
+const T=[
+["PVR Cinemas","Coimbatore","Fun Republic Mall, Avinashi Road","Dolby Atmos, Recliners, Food Court",true,SB],
+["INOX","Chennai","Express Avenue Mall, Royapettah","4K Projection, Parking, Cafe",true,SA],
+["AGS Cinemas","Chennai","T. Nagar","Dolby Atmos, Parking, Snack Bar",false,SB],
+["Rohini Silver Screens","Chennai","Koyambedu","Laser Projection, Parking, AC",false,SA],
+["Sathyam Cinemas","Chennai","Royapettah","Premium Lounge, Recliners, Dolby",true,SB],
+["SPI Cinemas","Salem","Five Roads","Dolby, Parking, Snack Bar",false,SA],
+["Vettri Theatres","Chengalpattu","Chromepet","4K, AC, Parking",false,SB],
+["Kamala Cinemas","Chennai","Vadapalani","Dolby, AC, Snack Bar",false,SA],
+["Devi Cinemas","Madurai","Town Hall Road","Dolby, AC, Wheelchair Access",false,SB],
+["Luxe Cinemas","Chennai","Phoenix Mall, Velachery","Luxury Recliners, Lounge, Dolby Atmos",true,SB],
+["Gopalan Cinemas","Tiruppur","Avinashi Road","Dolby, AC, Parking",false,SA],
+["KG Cinemas","Coimbatore","Race Course Road","Laser Projection, AC, Parking",false,SB],
+["Brookefields Cinemas","Coimbatore","Brookefields Mall","Recliners, Food Court, Dolby Atmos",true,SA],
+["Shanthi Cinemas","Tiruchirappalli","Cantonment","AC, Parking, Snack Bar",false,SA],
+["Kasi Theatre","Chennai","Ashok Nagar","4K, AC, Parking",false,SB]];
+// [name, price, emoji, colour]
+const SN=[["Popcorn",120,"🍿","#8b5e00"],["Cheese Popcorn",160,"🧀","#a86a00"],["Nachos",140,"🌮","#7a3b00"],["French Fries",110,"🍟","#9a7b00"],["Veg Burger",130,"🍔","#2e6b2e"],["Chicken Burger",170,"🍗","#8a2b1f"],["Sandwich",100,"🥪","#556b2f"],["Pizza",220,"🍕","#a1261b"],["Chocolate",60,"🍫","#4b2a1a"],["Soft Drink",80,"🥤","#1f5a8a"],["Mineral Water",30,"💧","#1b6f8a"],["Combo Meal (Popcorn + Burger + Drink)",350,"🎁","#6a1b9a"]];
+const RW=[["A","R",10],["B","R",10],["C","R",10],["D","R",10],["E","L",8],["F","L",8],["G","B",6]];
+const PR={R:150,L:300,B:500},CN={R:"Regular",L:"Luxury Recliner",B:"Royal Sleeping Bed"},COL={R:"#2e7d32",L:"#6a1b9a",B:"#c9302c"};
+
+/* ===== Helpers ===== */
+const $=id=>document.getElementById(id);
+const LS=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}};
+const SV=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+const toast=(m,t)=>{const e=document.createElement("div");e.className="toast "+(t||"");e.textContent=m;$("toasts").append(e);setTimeout(()=>e.remove(),3300)};
+const today=()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)};
+const addDays=n=>{const d=new Date();d.setDate(d.getDate()+n);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)};
+const rid=p=>p+Date.now().toString(36).toUpperCase().slice(-5)+Math.floor(Math.random()*900+100);
+// Poster: generated SVG (never breaks). To use a real poster, set an image URL here.
+function poster(t,i){const h=(i*47+10)%360,lines=[];let c="";t.replace(/&/g,"and").split(" ").forEach(x=>{if((c+" "+x).trim().length>11){lines.push(c);c=x}else c=(c+" "+x).trim()});lines.push(c);
+const tx=lines.map((l,k)=>`<text x='150' y='${190+k*34}' text-anchor='middle' font-size='30' fill='#fff' font-weight='bold' font-family='Times New Roman,serif'>${l}</text>`).join("");
+const s=`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 420'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='hsl(${h},70%,35%)'/><stop offset='1' stop-color='hsl(${(h+60)%360},70%,12%)'/></linearGradient></defs><rect width='300' height='420' fill='url(#g)'/><text x='150' y='95' text-anchor='middle' font-size='54'>🎬</text>${tx}<text x='150' y='398' text-anchor='middle' font-size='14' fill='#f5c542'>DEMO POSTER</text></svg>`;
+return "data:image/svg+xml,"+encodeURIComponent(s)}
+
+/* ===== Home page rendering ===== */
+$("dsel").innerHTML=D.map(d=>`<option ${d=="Chennai"?"selected":""}>${d}</option>`).join("");
+$("lf").innerHTML+=[...new Set(M.map(m=>m[1]))].map(l=>`<option>${l}</option>`).join("");
+function renderMovies(){const q=$("q").value.toLowerCase(),l=$("lf").value;
+ $("mgrid").innerHTML=M.map((m,i)=>({m,i})).filter(o=>o.m[0].toLowerCase().includes(q)&&(!l||o.m[1]==l)).map(({m,i})=>`
+ <div class="card"><div class="pw"><img class="p" data-m="${i}" src="${poster(m[0],i)}" alt="${m[0]} poster"><span class="rt">★ ${m[4]}/10 · ${m[1]}</span></div><h3>${m[0]}</h3>
+ <span class="tag">${m[1]}</span><span class="tag">${m[2]}</span>
+ <p class="mut">⏱ ${m[3]} · <span class="gold">★ ${m[4]}</span></p><p style="font-size:15px">${m[5]}</p>
+ <button class="btn sm" onclick="start(${i})">Book Tickets</button> <button class="btn sm ghost" onclick="details(${i})">Details</button></div>`).join("")||"<p>No movies match your search.</p>";applyPI()}
+function details(i){const m=M[i];openM(`<h2 class="gold">${m[0]}</h2><div style="display:flex;gap:18px;flex-wrap:wrap"><img data-m="${i}" src="${poster(m[0],i)}" style="width:220px;border-radius:10px"><div style="flex:1;min-width:240px"><p><b>Language:</b> ${m[1]}<br><b>Genre:</b> ${m[2]}<br><b>Duration:</b> ${m[3]}<br><b>Rating:</b> ★ ${m[4]}/10</p><p>${m[5]}</p><div class="demo">Catalogue/demo entry. Showtimes are sample data and do not reflect real availability.</div><button class="btn" onclick="start(${i})">Book Tickets</button></div></div>`);applyPI()}
+function renderTheatres(){const d=$("dsel").value;$("tdn").textContent=d;const l=T.filter(t=>t[1]==d);
+ $("tgrid").innerHTML=l.length?l.map(t=>`<div class="card"><div class="banner" style="background:linear-gradient(135deg,var(--pur),var(--red))">🏛</div><h3>${t[0]}</h3><p class="gold">${t[1]}</p><p>📍 ${t[2]}</p><p>${t[3].split(", ").map(f=>`<span class="tag">${f}</span>`).join("")}${t[4]?'<span class="tag" style="background:var(--red)">Royal Beds (demo)</span>':""}</p><p>🕒 ${t[5].join(" · ")}</p></div>`).join(""):`<p style="grid-column:1/-1" class="demo">Sorry, no theatres are available in ${d} in this demo. Please try Chennai, Coimbatore, Madurai, Salem, Tiruchirappalli, Tiruppur or Chengalpattu.</p>`}
+
+/* ===== Snacks & cart (saved in localStorage) ===== */
+let C=LS("cart",{});
+function snackHTML(x){return `<div class="grid">${SN.map((s,i)=>`<div class="card"><div class="simg" data-s="${i}" style="background:${s[3]}">${s[2]}</div><h4 style="font-size:16px">${s[0]}</h4><p class="gold">₹${s[1]}</p><div class="qty"><button onclick="qv('${x}${i}',-1)">−</button><input id="${x}${i}" value="1" readonly><button onclick="qv('${x}${i}',1)">+</button></div><button class="btn sm" style="margin-left:12px" onclick="addC(${i},'${x}')">Add to Cart</button></div>`).join("")}</div><div class="cartbox"></div>`}
+function qv(id,d){const e=$(id);e.value=Math.max(1,Math.min(10,+e.value+d))}
+function addC(i,x){C[i]=(C[i]||0)+ +$(x+i).value;SV("cart",C);cartRefresh();toast(SN[i][0]+" added to cart")}
+function cq(i,d){C[i]=(C[i]||0)+d;if(C[i]<=0)delete C[i];SV("cart",C);cartRefresh()}
+function cTot(){return Object.entries(C).reduce((a,[i,q])=>a+SN[i][1]*q,0)}
+function cartRefresh(){document.querySelectorAll(".cartbox").forEach(e=>e.innerHTML=`<h3>🛒 Your Cart</h3>`+(Object.keys(C).length?`<table><tr><th>Item</th><th>Price</th><th>Qty</th><th>Total</th><th></th></tr>${Object.entries(C).map(([i,q])=>`<tr><td>${SN[i][0]}</td><td>₹${SN[i][1]}</td><td><button onclick="cq(${i},-1)">−</button> ${q} <button onclick="cq(${i},1)">+</button></td><td>₹${SN[i][1]*q}</td><td><button onclick="cq(${i},-q)" style="display:none"></button><button onclick="cq(${i},-${q})">🗑</button></td></tr>`).join("")}</table><h3>Subtotal: <span class="gold">₹${cTot()}</span></h3>${$("modal").classList.contains("on")?"":'<p class="mut">Snacks are paid for during ticket checkout.</p><button class="btn" onclick="start()">Book Tickets with Snacks</button>'}`:"<p class='mut'>Your cart is empty.</p>"))}
+$("snk").innerHTML=snackHTML("p");
+
+/* =============================================================
+   BOOKING WIZARD
+   ============================================================= */
+let B={},S=1;
+const STEPS=["District","Movie","Theatre","Date & Show","Seats","Snacks","Payment","Ticket"];
+function openM(h){$("mbody").innerHTML=h;$("modal").classList.add("on")}
+function closeM(){$("modal").classList.remove("on");cartRefresh()}
+function start(m){B={d:$("dsel").value,m:m===undefined?"":m,t:"",date:today(),s:"",seats:[]};S=1;$("modal").classList.add("on");wz()}
+const sType=id=>RW.find(r=>r[0]==id[0])[1];
+function booked(){ // simulated booked seats: pseudo-random per show + seats from local bookings
+ const k=[B.m,B.t,B.date,B.s].join("|");let h=0;for(const c of k)h=(Math.imul(h,31)+c.charCodeAt(0))>>>0;const set=new Set();
+ RW.forEach(([r,,n])=>{for(let i=1;i<=n;i++){h=(Math.imul(h,1103515245)+12345)>>>0;if((h>>8)%100<22)set.add(r+i)}});
+ LS("bk",[]).filter(b=>b.key==k&&b.status!="Cancelled").forEach(b=>b.seats.forEach(s=>set.add(s)));return set}
+function calc(){const tk=B.seats.reduce((a,s)=>a+PR[sType(s)],0),sn=cTot(),tax=Math.round((tk+sn)*.12);return{tk,sn,tax,tot:tk+sn+tax}}
+function wz(){
+ let h=`<h2 class="gold">Book Tickets</h2><div class="steps">${STEPS.map((s,i)=>`<span class="${i+1==S?"cur":i+1<S?"done":""}">${i+1}. ${s}</span>`).join("")}</div><div>`;
+ const th=T[B.t];
+ if(S==1)h+=`<p>Select your Tamil Nadu district:</p><select onchange="B.d=this.value;B.t='';B.s=''">${D.map(d=>`<option ${d==B.d?"selected":""}>${d}</option>`).join("")}</select>`;
+ if(S==2)h+=`<p>Select a movie:</p><select onchange="B.m=this.value" style="width:100%"><option value="">-- Choose movie --</option>${M.map((m,i)=>`<option value="${i}" ${B.m===i||B.m==i&&B.m!==""?"selected":""}>${m[0]} (${m[1]})</option>`).join("")}</select><div class="demo">Showtimes are sample data for catalogue/demo movies.</div>`;
+ if(S==3){const l=T.map((t,i)=>({t,i})).filter(o=>o.t[1]==B.d);h+=`<p>Theatres in <b>${B.d}</b>:</p>`+(l.length?l.map(o=>`<div class="opt ${B.t===o.i?"sel":""}" onclick="B.t=${o.i};B.s='';wz()"><b>${o.t[0]}</b> — ${o.t[2]}<br><span class="mut">${o.t[3]}</span>${o.t[4]?' <span class="tag" style="background:var(--red)">Royal Beds (demo)</span>':""}</div>`).join(""):`<div class="demo">No theatres available in ${B.d} (demo). Go back and choose another district, e.g. Chennai or Coimbatore.</div>`)}
+ if(S==4)h+=`<label>Select date</label><input type="date" min="${today()}" max="${addDays(14)}" value="${B.date}" onchange="B.date=this.value"><p>Select showtime at <b>${th[0]}</b>:</p>${th[5].map(s=>`<span class="chip ${B.s==s?"sel":""}" onclick="B.s='${s}';wz()">${s}</span>`).join("")}<div class="demo">Sample showtimes (demo data).</div>`;
+ if(S==5){const bk=booked();h+=`<div class="demo">Seat availability is simulated in this frontend demo.</div><div class="legend">${Object.keys(PR).map(k=>`<span><i class="dot" style="background:${COL[k]}"></i>${CN[k]} ₹${PR[k]}</span>`).join("")}<span><i class="dot" style="background:#444"></i>Booked</span></div><div class="screen"></div><p style="text-align:center" class="mut">SCREEN THIS WAY</p>`+RW.map(([r,t,n])=>r=="G"&&!th[4]?`<p class="row mut">Row G (Royal Sleeping Bed) is available only in selected demo theatres — not here.</p>`:`<div class="row"><b>${r}</b>${Array.from({length:n},(_,i)=>{const id=r+(i+1),b=bk.has(id);return`<button class="seat ${t} ${b?"bk":""} ${B.seats.includes(id)?"sel":""}" ${b?"disabled":""} onclick="seat('${id}',this)">${id}</button>`}).join("")}</div>`).join("")+`<p id="ss" style="margin-top:14px"></p>`}
+ if(S==6)h+=`<p>Add snacks (optional), then press Next.</p>`+snackHTML("w");
+ if(S==7){const c=calc(),m=M[B.m];h+=`<h3>Booking Summary</h3><table><tr><td>Movie</td><td>${m[0]}</td></tr><tr><td>Theatre</td><td>${th[0]}</td></tr><tr><td>District</td><td>${B.d}</td></tr><tr><td>Date / Show</td><td>${B.date} · ${B.s}</td></tr><tr><td>Seats</td><td>${B.seats.join(", ")}</td></tr><tr><td>Ticket price</td><td>₹${c.tk}</td></tr><tr><td>Snack price</td><td>₹${c.sn}</td></tr><tr><td>Taxes (12% demo)</td><td>₹${c.tax}</td></tr><tr><th>Final amount</th><th class="gold">₹${c.tot}</th></tr></table>
+ <h3>Payment Method <span class="tag" style="background:var(--red)">DEMO</span></h3><div class="demo">Simulated payment. Never enter real card numbers, CVVs, UPI PINs or banking passwords. A real site needs a secure backend plus a gateway such as Razorpay or Cashfree.</div>
+ <div class="opt"><label><input type="radio" name="pm" value="UPI" checked> UPI</label><select id="upi"><option>Google Pay</option><option>PhonePe</option><option>Paytm</option></select></div>
+ <div class="opt"><label><input type="radio" name="pm" value="Debit Card"> Debit Card</label></div>
+ <div class="opt"><label><input type="radio" name="pm" value="Credit Card"> Credit Card</label></div>
+ <div class="opt"><label><input type="radio" name="pm" value="Net Banking"> Net Banking</label><select id="bank"><option>SBI</option><option>Indian Bank</option><option>HDFC</option><option>ICICI</option></select></div>
+ <div class="opt"><label><input type="radio" name="pm" value="Pay at Counter"> Pay at Counter (enabled for demo)</label></div>
+ <label style="display:inline"><input type="checkbox" id="fail"> Simulate payment failure</label><br><br><button class="btn" id="pay" onclick="pay()">Pay ₹${c.tot} (Demo)</button> <button class="btn ghost" onclick="go(-1)">← Back</button>`}
+ if(S==8)h+=ticketHTML(B.last);
+ h+="</div>";
+ if(S<8)h+=`<div class="nav2">${S>1?'<button class="btn ghost" onclick="go(-1)">← Back</button>':"<span></span>"}${S<7?'<button class="btn" onclick="go(1)">Next →</button>':"<span></span>"}</div>`;
+ $("mbody").innerHTML=h;
+ if(S==5)seat();if(S==6){cartRefresh();applyPI()}if(S==8)makeQR(B.last);
+ $("modal").scrollTo(0,0)}
+function seat(id,el){if(id){const i=B.seats.indexOf(id);i<0?B.seats.length<10?B.seats.push(id):toast("Maximum 10 seats per booking","err"):B.seats.splice(i,1);el.classList.toggle("sel",B.seats.includes(id))}
+ const c=calc();$("ss").innerHTML=`Selected: <b>${B.seats.join(", ")||"none"}</b> — Tickets: <b class="gold">₹${c.tk}</b>`}
+function go(n){if(n>0){const e=(S==2&&B.m==="")?"Please select a movie.":(S==3&&B.t==="")?"Please select a theatre.":(S==4&&(!B.date||!B.s))?"Please choose a date and showtime.":(S==5&&!B.seats.length)?"Please select at least one seat.":"";if(e)return toast(e,"err")}S+=n;wz()}
+
+/* ===== Simulated payment -> creates booking ===== */
+function pay(){const pm=document.querySelector("input[name=pm]:checked").value;$("pay").disabled=true;$("pay").textContent="Processing demo payment…";
+ setTimeout(()=>{if($("fail").checked){toast("Demo payment failed. Please try again.","err");$("pay").disabled=false;$("pay").textContent="Retry Payment";return}
+  const c=calc(),th=T[B.t],snacks=Object.entries(C).map(([i,q])=>({n:SN[i][0],q,p:SN[i][1]}));
+  const b={id:rid("TKT"),sid:rid("SNK"),key:[B.m,B.t,B.date,B.s].join("|"),movie:M[B.m][0],mi:+B.m,theatre:th[0],district:B.d,date:B.date,show:B.s,seats:[...B.seats],snacks,counter:"Counter "+(1+Math.floor(Math.random()*4)),pm:pm=="UPI"?"UPI ("+$("upi").value+")":pm,amt:c,status:pm=="Pay at Counter"?"Confirmed (Pay at Counter)":"Confirmed",sstatus:snacks.length?"Preparing":"No snacks ordered",at:new Date().toLocaleString()};
+  const all=LS("bk",[]);all.unshift(b);SV("bk",all);C={};SV("cart",C);B.last=b;S=8;wz();renderBookings();toast("Demo payment successful! 🎉")},1300)}
+
+/* ===== Ticket + QR codes ===== */
+function ticketHTML(b){return `<h2 class="gold">🎟 Ticket Confirmation</h2><div class="demo">Demo booking. These QR codes are NOT connected to any real theatre ticket-validation system.</div>
+<table><tr><td>Booking ID</td><td><b>${b.id}</b></td></tr><tr><td>Movie</td><td>${b.movie}</td></tr><tr><td>Theatre / District</td><td>${b.theatre}, ${b.district}</td></tr><tr><td>Date &amp; Show</td><td>${b.date} · ${b.show}</td></tr><tr><td>Seats</td><td>${b.seats.map(s=>s+" ("+CN[sType(s)]+")").join(", ")}</td></tr><tr><td>Payment</td><td>${b.pm} (demo)</td></tr><tr><td>Tickets / Snacks / Tax</td><td>₹${b.amt.tk} / ₹${b.amt.sn} / ₹${b.amt.tax}</td></tr><tr><th>Total</th><th class="gold">₹${b.amt.tot}</th></tr><tr><td>Status</td><td>${b.status}</td></tr></table>
+<div class="qrs"><div class="qrb"><h4>QR 1 – Movie Ticket</h4><div id="q1"></div><br><button class="btn sm" onclick="dl('q1','${b.id}-ticket')">Download QR</button></div>
+<div class="qrb"><h4>QR 2 – Snacks Order</h4><div id="q2"></div><p class="mut">Order ${b.sid}<br>Pickup: ${b.counter} · ${b.sstatus}</p><button class="btn sm" onclick="dl('q2','${b.sid}-snacks')">Download QR</button></div></div>
+<p style="margin-top:14px"><b>Snack items:</b> ${b.snacks.length?b.snacks.map(s=>s.n+" × "+s.q).join(", "):"None"}</p><button class="btn" onclick="window.print()">🖨 Print Ticket</button> <button class="btn ghost" onclick="closeM()">Close</button>`}
+function makeQR(b){
+ const t1=`MOVIE TICKET\nBooking ID: ${b.id}\nMovie: ${b.movie}\nTheatre: ${b.theatre}\nDate: ${b.date} ${b.show}\nSeats: ${b.seats.join(", ")}\nStatus: ${b.status}`;
+ const t2=`SNACK ORDER\nOrder ID: ${b.sid}\nItems: ${b.snacks.length?b.snacks.map(s=>s.n+" x"+s.q).join(", "):"None"}\nPickup: ${b.counter}\nStatus: ${b.sstatus}`;
+ [["q1",t1],["q2",t2]].forEach(([id,t])=>{$(id).innerHTML="";try{new QRCode($(id),{text:t,width:160,height:160})}catch(e){$(id).textContent="QR library failed to load (check internet connection)."}})}
+function dl(id,name){const c=$(id).querySelector("canvas"),i=$(id).querySelector("img");const src=c?c.toDataURL("image/png"):i&&i.src;if(!src)return toast("QR not ready","err");const a=document.createElement("a");a.href=src;a.download=name+".png";a.click()}
+
+/* ===== My Bookings (localStorage) ===== */
+function renderBookings(){const l=LS("bk",[]);$("blist").innerHTML=l.length?`<div class="grid">${l.map((b,i)=>`<div class="card" style="padding:12px"><h3>${b.movie}</h3><p>${b.theatre}, ${b.district}<br>${b.date} · ${b.show}<br>Seats: ${b.seats.join(", ")}</p><p class="gold">₹${b.amt.tot}</p><p>ID: ${b.id}<br><span class="tag" style="background:${b.status=="Cancelled"?"var(--red)":"#2e7d32"}">${b.status}</span></p>${b.status!="Cancelled"?`<button class="btn sm" onclick="viewB(${i})">View Ticket</button> <button class="btn sm ghost" onclick="cancelB(${i})">Cancel (Demo)</button>`:""}</div>`).join("")}</div>`:"<p class='mut'>No bookings yet. Book a movie to see it here (stored in your browser only).</p>"}
+function viewB(i){const b=LS("bk",[])[i];openM(ticketHTML(b));makeQR(b)}
+function cancelB(i){if(!confirm("Cancel this demo booking? Seats will be released."))return;const l=LS("bk",[]);l[i].status="Cancelled";l[i].sstatus="Cancelled";SV("bk",l);renderBookings();toast("Booking cancelled (demo refund simulated)")}
+
+/* ===== Login / Register (demo — password is never stored) ===== */
+let reg=false;
+function authM(){const u=LS("user",null);if(u){if(confirm("Logged in as "+u.name+". Log out?")){localStorage.removeItem("user");userUI();toast("Logged out")}return}
+ openM(`<h2 class="gold">${reg?"Register":"Login"}</h2><div class="demo">Demo only: no real account is created and passwords are not stored.</div><form onsubmit="return auth(event)">${reg?'<label>Full name</label><input id="an">':""}<label>Email</label><input id="ae"><label>Password (min 6 characters)</label><input id="ap" type="password"><br><br><button class="btn">${reg?"Create account":"Login"}</button> <button type="button" class="btn ghost" onclick="reg=!reg;authM()">${reg?"Have an account? Login":"New here? Register"}</button></form>`)}
+function auth(e){e.preventDefault();const em=$("ae").value.trim(),pw=$("ap").value,nm=reg?$("an").value.trim():em.split("@")[0];
+ if(reg&&nm.length<2)return toast("Please enter your name","err");if(!/^\S+@\S+\.\S+$/.test(em))return toast("Enter a valid email","err");if(pw.length<6)return toast("Password must be at least 6 characters","err");
+ SV("user",{name:nm,email:em});userUI();closeM();toast("Welcome, "+nm+"!");return false}
+function userUI(){const u=LS("user",null);$("loginBtn").textContent=u?"👤 "+u.name:"Login / Register"}
+function contact(e){e.preventDefault();if($("cn").value.trim().length<2||!/^\S+@\S+\.\S+$/.test($("ce").value)||$("cm").value.trim().length<5){toast("Please fill all fields correctly","err");return false}toast("Message sent (demo)!");e.target.reset();return false}
+
+/* ===== Real images: movie posters + snack photos from Wikipedia (fetched in the browser, cached in localStorage).
+   If an image cannot load, a generated poster / emoji tile is shown instead, so nothing ever looks broken. ===== */
+const MQ=["Leo 2023 Tamil film Lokesh Kanagaraj","Jailer 2023 Tamil film Nelson","Vikram 2022 film Kamal Haasan","Master 2021 Tamil film Vijay","Thunivu 2023 Tamil film","Amaran 2024 film Sivakarthikeyan","Dragon 2025 Tamil film Pradeep Ranganathan","Good Bad Ugly 2025 film Ajith","Coolie 2025 Tamil film Rajinikanth","Retro 2025 Tamil film Suriya","Pushpa 2 The Rule film","RRR 2022 film","Kalki 2898 AD film","Manjummel Boys film","Premalu 2024 film","Lucifer 2019 Malayalam film","Jawan 2023 film Shah Rukh Khan","3 Idiots film","Oppenheimer 2023 film","Inception film Nolan"];
+const SQ=["Popcorn","Popcorn","Nachos","French fries","Veggie burger","Chicken sandwich","Sandwich","Pizza","Chocolate bar","Soft drink","Bottled water","Fast food"];
+let PI=LS("pimg",{}),SI=LS("simg",{});
+const wk=async p=>Object.values((await (await fetch("https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&piprop=thumbnail&pithumbsize=450&format=json&origin=*&redirects=1&"+p)).json()).query?.pages||{});
+const pre=(u,ok)=>{const im=new Image();im.onload=()=>ok(u);im.src=u};
+function applyPI(){document.querySelectorAll("img[data-m]").forEach(e=>{if(PI[e.dataset.m])e.src=PI[e.dataset.m]});
+ document.querySelectorAll("[data-s]").forEach(e=>{const u=SI[e.dataset.s];if(u){e.style.backgroundImage=`url("${u}")`;e.style.fontSize="0";if(e.dataset.s==1)e.style.filter="sepia(.8) saturate(3)"}})}
+// OPTIONAL: paste your own poster image URL for any movie (number = position in the M list, Leo = 0)
+// Example: POSTERS[0]="https://example.com/leo.jpg";
+const POSTERS={};
+// Finds a poster: your own URL -> Wikipedia article image -> iTunes movie artwork
+async function findPoster(i){
+ if(POSTERS[i])return POSTERS[i];
+ const bs=M[i][0].split(":")[0].toLowerCase();
+ const J=async u=>{try{return await (await fetch(u)).json()}catch(e){return null}};
+ const s=await J("https://en.wikipedia.org/w/api.php?action=query&list=search&srlimit=5&format=json&origin=*&srsearch="+encodeURIComponent(MQ[i]));
+ for(const h of (s?.query?.search||[]).filter(h=>h.title.toLowerCase().includes(bs))){
+  const r=await J("https://en.wikipedia.org/api/rest_v1/page/summary/"+encodeURIComponent(h.title.replace(/ /g,"_")));
+  const u=r?.thumbnail?.source||r?.originalimage?.source;if(u)return u}
+ const t=await J("https://itunes.apple.com/search?media=movie&limit=8&country=IN&term="+encodeURIComponent(M[i][0]));
+ const m=(t?.results||[]).find(x=>(x.trackName||"").toLowerCase().includes(bs));
+ return m?m.artworkUrl100.replace("100x100bb","400x600bb"):null}
+function loadImgs(){
+ M.forEach((m,i)=>{if(PI[i])return;findPoster(i).then(u=>{if(u)pre(u,v=>{PI[i]=v;SV("pimg",PI);applyPI()})})});
+ SN.forEach((s,i)=>{if(SI[i])return;wk("titles="+encodeURIComponent(SQ[i])).then(ps=>{const u=ps[0]?.thumbnail?.source;if(u)pre(u,u=>{SI[i]=u;SV("simg",SI);applyPI()})}).catch(()=>{})})}
+
+renderMovies();renderTheatres();renderBookings();cartRefresh();userUI();applyPI();loadImgs();setTimeout(()=>{if(!Object.keys(PI).length)toast("Could not load real posters. Open the site in a normal browser (Live Server) with internet on.","err")},9000);
+</script>
+</body>
+</html>
